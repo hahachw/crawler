@@ -3,7 +3,7 @@ import re
 
 # 파일 경로 설정
 input_path = "top5_data.json"       # 원본 JSON 파일
-output_path = "formatted_text.txt"      # 결과 텍스트 파일
+output_path = "LLM_text.txt"      # 결과 텍스트 파일
 
 # JSON 불러오기
 with open(input_path, "r", encoding="utf-8") as f:

@@ -88,4 +88,31 @@ def compare_top_posts():
 
     print(len(top5_posts))
 
-compare_top_posts()
+def compare_bottom_posts():
+    with open("text_fluoroscopy/5_percent_bottom.json", "r", encoding="utf-8") as tf:
+        tf_data = json.load(tf)
+    with open("ReMoDetect/5_percent_bottom.json", "r", encoding="utf-8") as rm:
+        rm_data = json.load(rm)
+    
+    rm_dict = {post["num"]: post for post in rm_data}
+
+    bottom5_posts = []
+    for tf_post in tf_data:
+        num = tf_post["num"]
+        if num in rm_dict:
+            rm_post = rm_dict[num]
+            bottom5_posts.append({
+                "num": num,
+                "text": tf_post["text"],
+                "category": tf_post["category"],
+                "keyword": tf_post["keyword"],
+                "tf_score": tf_post["score"],
+                "rm_score": rm_post["score"]
+            })
+
+    with open("bottom5_data.json", "w", encoding="utf-8") as f:
+        json.dump(bottom5_posts, f, ensure_ascii=False, indent=4)
+
+    print(len(bottom5_posts))
+
+compare_bottom_posts()
