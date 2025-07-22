@@ -56,32 +56,6 @@ def plot_by_category():
     plt.tight_layout()
     plt.show()
 
-def count_high_category():
-    threshold = 0.8
-    count_total = df.groupby('category').size()
-    count_high = df[df['score'] > threshold].groupby('category').size()
-
-    high_ratio = (count_high / count_total).fillna(0).sort_values(ascending=False)
-    count_high = count_high.reindex(high_ratio.index).fillna(0).astype(int)
-    count_total = count_total.reindex(high_ratio.index).astype(int)
-
-    # 시각화
-    plt.figure(figsize=(10, 5))
-    ax = high_ratio.plot(kind='bar', color='skyblue', edgecolor='black')
-    plt.title(f"Proportion of Score > {threshold} by Category")
-    plt.ylabel("Ratio")
-    plt.xlabel("Category")
-    plt.xticks(rotation=0)
-    plt.grid(axis='y', linestyle='--', alpha=0.5)
-
-    # 막대 위에 total, high, ratio 표시
-    for i, (total, high, ratio) in enumerate(zip(count_total, count_high, high_ratio)):
-        text = f"{high}/{total}\n{ratio:.2f}"
-        ax.text(i, ratio * 0.4, text, ha='center', va='bottom', fontsize=9)
-
-    plt.tight_layout()
-    plt.show()
-
 def plot_by_keyword():
     keyword_avg = df.groupby("keyword")["score"].mean().sort_values(ascending=False)
     keyword_var = df.groupby("keyword")["score"].var().reindex(keyword_avg.index)
@@ -97,17 +71,62 @@ def plot_by_keyword():
     plt.tight_layout()
     plt.show()
 
+def count_high_category():
+    threshold = 0.8
+
+    # 원래 df에서 등장한 category 순서 유지
+    category_order = df['category'].drop_duplicates()
+
+    # 전체 수 & high 수
+    count_total = df.groupby('category').size()
+    count_high = df[df['score'] > threshold].groupby('category').size()
+
+    # 비율 계산
+    high_ratio = (count_high / count_total).fillna(0)
+    count_high = count_high.fillna(0).astype(int)
+    count_total = count_total.astype(int)
+
+    # 순서 재정렬 (df 등장 순서 기준)
+    high_ratio = high_ratio.reindex(category_order)
+    count_high = count_high.reindex(category_order).fillna(0).astype(int)
+    count_total = count_total.reindex(category_order).fillna(0).astype(int)
+
+    # 시각화
+    plt.figure(figsize=(10, 5))
+    ax = high_ratio.plot(kind='bar', color='skyblue', edgecolor='black')
+    plt.title(f"Proportion of Score > {threshold} by Category")
+    plt.ylabel("Ratio")
+    plt.xlabel("Category")
+    plt.xticks(rotation=0)
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+    # 막대 위 텍스트 표시
+    for i, (total, high, ratio) in enumerate(zip(count_total, count_high, high_ratio)):
+        text = f"{high}/{total}\n{ratio:.2f}"
+        ax.text(i, ratio * 0.4, text, ha='center', va='bottom', fontsize=9)
+
+    plt.tight_layout()
+    plt.show()
+
 def count_high_keyword():
     threshold = 0.8
+
+    # 키워드 등장 순서 기준으로 고유값 리스트 추출
+    keyword_order = df['keyword'].drop_duplicates()
+
+    # 전체 수 & high score 수
     count_total = df.groupby('keyword').size()
     count_high = df[df['score'] > threshold].groupby('keyword').size()
 
-    high_ratio = (count_high / count_total).fillna(0).sort_values(ascending=False)
-    count_high = count_high.reindex(high_ratio.index).fillna(0).astype(int)
-    count_total = count_total.reindex(high_ratio.index).astype(int)
+    # 비율 계산
+    high_ratio = (count_high / count_total).fillna(0)
+    count_high = count_high.fillna(0).astype(int)
+    count_total = count_total.astype(int)
 
-    print("High-confidence ratio per keyword:")
-    print(high_ratio.round(3))
+    # 인덱스를 keyword 등장 순서로 재정렬
+    high_ratio = high_ratio.reindex(keyword_order)
+    count_high = count_high.reindex(keyword_order).fillna(0).astype(int)
+    count_total = count_total.reindex(keyword_order).fillna(0).astype(int)
 
     # 시각화
     plt.figure(figsize=(14, 6))
@@ -118,7 +137,7 @@ def count_high_keyword():
     plt.xticks(rotation=45, ha='right')
     plt.grid(axis='y', linestyle='--', alpha=0.5)
 
-    # 막대 안에 high/total 및 ratio 표시
+    # 텍스트 표시
     for i, (high, ratio) in enumerate(zip(count_high, high_ratio)):
         text = f"{high}"
         ax.text(i, ratio + 0.001, text, ha='center', va='bottom', fontsize=8)
@@ -126,6 +145,4 @@ def count_high_keyword():
     plt.tight_layout()
     plt.show()
 
-#count_high_category()
-#plot_by_keyword()
-count_high_keyword()
+count_high_category()

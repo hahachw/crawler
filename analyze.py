@@ -88,4 +88,4 @@ def compare_top_posts():
 
     print(len(top5_posts))
 
-scatter_plot()
+compare_top_posts()
