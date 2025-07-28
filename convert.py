@@ -85,4 +85,20 @@ def merge_for_ReMoDetect():
     with open("ReMoDetect/ReMoDetect_data.json", "w", encoding="utf-8") as f:
         json.dump(merged_list, f, ensure_ascii=False, indent=4)
 
-merge_for_ReMoDetect()
+def merge_author_score_data():
+    with open("datas/data.json", "r", encoding="utf-8") as f:
+        data_list = json.load(f)
+    
+    with open("datas/score_data.json", "r", encoding="utf-8") as f:
+        score_list = json.load(f)
+
+    merged_list = []
+    for i in range(len(score_list)):
+        merged = score_list[i].copy()
+        merged["author"] = data_list[i].get("author", "Unknown")
+        merged_list.append(merged)
+
+    with open("datas/score_data_with_author.json", "w", encoding="utf-8") as f:
+        json.dump(merged_list, f, ensure_ascii=False, indent=4)
+
+merge_author_score_data()
