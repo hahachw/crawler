@@ -95,7 +95,16 @@ def merge_author_score_data():
     merged_list = []
     for i in range(len(score_list)):
         merged = score_list[i].copy()
-        merged["author"] = data_list[i].get("author", "Unknown")
+        author_data = data_list[i]
+
+        merged["author"] = author_data.get("author", "Unknown")
+
+        raw_time = author_data.get("time", "")
+        if "시간" in raw_time:
+            merged["time"] = "2025. 7. 14."
+        else:
+            merged["time"] = raw_time.strip()
+
         merged_list.append(merged)
 
     with open("datas/score_data_with_author.json", "w", encoding="utf-8") as f:
