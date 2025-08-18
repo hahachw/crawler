@@ -1,6 +1,7 @@
 import json
 import re
 import matplotlib.pyplot as plt
+import numpy as np
 from collections import defaultdict
 from datetime import datetime
 
@@ -175,7 +176,7 @@ def plot_author_scores(author_name):
     for post in posts:
         tf = post["tf_score"]
         rm = post["rm_score"]
-        num = post["time"]
+        num = post["num"]
         xs.append(tf)
         ys.append(rm)
         nums.append(num)
@@ -296,4 +297,114 @@ def plot_with_tags_detail():
     plt.tight_layout()
     plt.show()
 
-plot_with_tags_detail()
+def format_everyones_IT():
+    input_path = "datas/LLM_author_score_data.json"
+    output_path = "datas/everyones_it_text.txt"
+
+    # JSON 불러오기
+    with open(input_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # '모두의IT' 데이터만 가져오기
+    items = data.get("모두의IT", [])
+
+    # rm_score → tf_score 순 정렬
+    items_sorted = sorted(
+        items,
+        key=lambda x: (x.get("tf_score", 0), x.get("rm_score", 0)),
+        reverse=True
+    )
+
+    # TXT 저장
+    with open(output_path, "w", encoding="utf-8") as f:
+        for item in items_sorted:
+            num = item.get("num")
+            tf_score = item.get("tf_score", 0)
+            rm_score = item.get("rm_score", 0)
+            raw_text = item.get("text", "")
+
+            # 문장 단위 줄바꿈 (마침표, 느낌표, 물음표 기준)
+            formatted_text = re.sub(r"(?<=[.!?])\s+", "\n", raw_text.strip())
+
+            f.write(f"[num: {num}]\n")
+            f.write(f"[tf_score: {tf_score:.6f}]\n")
+            f.write(f"[rm_score: {rm_score:.6f}]\n")
+            f.write(f"{formatted_text}\n\n")
+
+def plot_tf_scores_IT():
+    # 파일 경로
+    path = "everyones_IT/text_fluoroscopy_data_IT.json"
+
+    # 데이터 로드
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # tf_score 추출
+    tf_scores = [d["tf_score"] for d in data if "tf_score" in d]
+
+    # --- x축=tf_score, 점으로 분포(스트립 플롯) ---
+    np.random.seed(0)
+    y = np.random.normal(loc=0.0, scale=0.02, size=len(tf_scores))  # 겹침 방지용 세로 방향 아주 작은 지터
+
+    #plt.figure(figsize=(10, 3))
+    #plt.scatter(tf_scores, y, s=14, alpha=0.6, edgecolor="none")
+    #plt.yticks([])  # y축 숨김 (분포만 보이도록)
+    #plt.xlabel("tf_score")
+    #plt.title("tf_score strip plot")
+    #plt.grid(axis="x", linestyle="--", alpha=0.4)
+    #plt.tight_layout()
+    #plt.show()
+
+    # (옵션) 히스토그램도 같이 보고 싶으면 아래 주석 해제
+    plt.figure(figsize=(10, 3))
+    plt.hist(tf_scores, bins=40, alpha=0.8)
+    plt.xlabel("tf_score")
+    plt.ylabel("count")
+    plt.title("tf_score histogram")
+    plt.tight_layout()
+    plt.show()
+
+def plot_tf_scores_with_date_IT():
+    # 파일 경로
+    path = "everyones_IT/text_fluoroscopy_data_IT.json"
+
+    # 데이터 로드
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 날짜 변환 함수
+    def parse_time(t):
+        # "2025. 8. 10. 13:27" 또는 "2025. 08. 11." 형태 모두 처리
+        t = t.strip().replace(".", "").replace("  ", " ")
+        parts = t.split()
+        if len(parts) == 3:  # 날짜만 있음
+            return datetime.strptime(parts[0] + " " + parts[1] + " " + parts[2], "%Y %m %d")
+        elif len(parts) == 4:  # 날짜 + 시간
+            return datetime.strptime(parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3], "%Y %m %d %H:%M")
+        else:
+            raise ValueError(f"Unexpected time format: {t}")
+
+    # 데이터에서 time과 tf_score 추출
+    times, scores = [], []
+    for d in data:
+        if "tf_score" in d and "time" in d:
+            try:
+                times.append(parse_time(d["time"]))
+                scores.append(d["tf_score"])
+            except Exception as e:
+                print("시간 파싱 실패:", d["time"], e)
+
+    # 시각화
+    plt.figure(figsize=(10, 6))
+    plt.scatter(times, scores, alpha=0.6, edgecolor="k")
+    plt.xlabel("Time")
+    plt.ylabel("TF Score")
+    plt.title("TF Score over Time")
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.show()
+
+#plot_with_tags_detail()
+#plot_author_scores("모두의IT")
+#format_everyones_IT()
+plot_tf_scores_with_date_IT()

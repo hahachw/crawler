@@ -1,0 +1,68 @@
+[
+  {
+    "categoryNo": 25,
+    "categoryName": "1. 삼성/갤럭시 이야기",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=25",
+    "maxpage": 8
+  },
+  {
+    "categoryNo": 33,
+    "categoryName": "2. 애플/아이폰 이야기",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=33",
+    "maxpage": 10
+  },
+  {
+    "categoryNo": 34,
+    "categoryName": "3.안드로이드폰 이야기",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=34",
+    "maxpage": 2
+  },
+  {
+    "categoryNo": 28,
+    "categoryName": "4.노트북/태블릿리뷰",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=28",
+    "maxpage": 4
+  },
+  {
+    "categoryNo": 29,
+    "categoryName": "5.TV/가전라이프/카메라",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=29",
+    "maxpage": 14
+  },
+  {
+    "categoryNo": 26,
+    "categoryName": "6.이거 몰랐지/IT 꿀팁",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=26",
+    "maxpage": 3
+  },
+  {
+    "categoryNo": 27,
+    "categoryName": "7.AI트렌드/로봇/IT소식",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=27",
+    "maxpage": 6
+  },
+  {
+    "categoryNo": 30,
+    "categoryName": "8.게임기/콘솔이야기",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=30",
+    "maxpage": 3
+  },
+  {
+    "categoryNo": 31,
+    "categoryName": "9.오디오/웨어러블",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=31",
+    "maxpage": 5
+  },
+  {
+    "categoryNo": 32,
+    "categoryName": "10. 메타버스/확장현실",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=32",
+    "maxpage": 1
+  },
+  {
+    "categoryNo": 24,
+    "categoryName": "IT",
+    "href": "https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=24",
+    "maxpage": 293
+  }
+]

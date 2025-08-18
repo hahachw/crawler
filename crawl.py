@@ -5,8 +5,8 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
-import time
-import json
+import time, re, json
+from urllib.parse import urljoin
 
 categories = [
     {
@@ -72,74 +72,235 @@ options = Options()
 options.add_argument("--headless")
 driver = webdriver.Chrome()
 
-# crawling
-post_data = []
-for category in categories:
-    for keyword in category["keywords"]:
-        for page in range(1,11):
-            # open url by category,keyword,page
-            cate_num = category["category_id"]
-            key_num = keyword["keyword_id"]
-            url = "https://section.blog.naver.com/ThemePost.naver?directoryNo={}&activeDirectorySeq={}&currentPage={}".format(key_num,cate_num,page)
-            driver.get(url)
-            time.sleep(1)
+def initcrawl():
+    # crawling
+    post_data = []
+    for category in categories:
+        for keyword in category["keywords"]:
+            for page in range(1,11):
+                # open url by category,keyword,page
+                cate_num = category["category_id"]
+                key_num = keyword["keyword_id"]
+                url = "https://section.blog.naver.com/ThemePost.naver?directoryNo={}&activeDirectorySeq={}&currentPage={}".format(key_num,cate_num,page)
+                driver.get(url)
+                time.sleep(1)
 
-            # get metadata of posts
-            posts = driver.find_elements(By.CLASS_NAME, "list_post_article")
-            for post in posts:
-                # info
-                info = post.find_element(By.CLASS_NAME, "info_author")
-                author = info.find_element(By.CLASS_NAME, "name_author").text.strip()
-                period = info.find_element(By.CLASS_NAME, "time").text.strip()
+                # get metadata of posts
+                posts = driver.find_elements(By.CLASS_NAME, "list_post_article")
+                for post in posts:
+                    # info
+                    info = post.find_element(By.CLASS_NAME, "info_author")
+                    author = info.find_element(By.CLASS_NAME, "name_author").text.strip()
+                    period = info.find_element(By.CLASS_NAME, "time").text.strip()
 
-                # title
-                desc = post.find_element(By.CLASS_NAME, "desc")
-                title = desc.find_element(By.CLASS_NAME, "title_post").text.strip()
-                link = desc.find_element(By.CLASS_NAME, "desc_inner").get_attribute("href")
+                    # title
+                    desc = post.find_element(By.CLASS_NAME, "desc")
+                    title = desc.find_element(By.CLASS_NAME, "title_post").text.strip()
+                    link = desc.find_element(By.CLASS_NAME, "desc_inner").get_attribute("href")
 
-                post_data.append({
-                    "category" : category["category_name"],
-                    "keyword" : keyword["keyword_name"],
-                    "page" : page,
-                    "author" : author,
-                    "time" : period,
-                    "title" : title,
-                    "link" : link
-                })
+                    post_data.append({
+                        "category" : category["category_name"],
+                        "keyword" : keyword["keyword_name"],
+                        "page" : page,
+                        "author" : author,
+                        "time" : period,
+                        "title" : title,
+                        "link" : link
+                    })
 
-# get post contents
-for post in post_data:
-    driver.get(post["link"])
+    # get post contents
+    for post in post_data:
+        driver.get(post["link"])
+        time.sleep(1)
+
+        print(post["link"])
+        try:
+            driver.switch_to.frame("mainFrame")
+        except:
+            print(f"iframe 진입 실패: {post['link']}")
+            post["content"] = ""
+            continue
+
+        try:
+            content = ""
+            if driver.find_elements(By.CLASS_NAME, "se-main-container"):
+                container = driver.find_element(By.CLASS_NAME, "se-main-container")
+                texts = container.find_elements(By.CLASS_NAME, "se-text")
+                content = "\n\n".join(t.text.strip() for t in texts if t.text.strip())
+            elif driver.find_elements(By.ID, "postViewArea"):
+                container = driver.find_element(By.ID, "postViewArea")
+                content = container.text.strip()
+            else:
+                print(f"본문 구조 알 수 없음: {post['link']}")
+            post["content"] = content
+        except:
+            print(f"본문 수집 실패: {post['link']}")
+            post["content"] = ""
+
+        driver.switch_to.default_content()
+
+    # save
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(post_data, f, ensure_ascii=False, indent=2)
+
+    driver.quit()
+
+def crawl_everyIT():
+    post_data = []
+    url = "https://blog.naver.com/gridanews"
+    driver.get(url)
     time.sleep(1)
 
-    print(post["link"])
-    try:
-        driver.switch_to.frame("mainFrame")
-    except:
-        print(f"iframe 진입 실패: {post['link']}")
-        post["content"] = ""
-        continue
+    driver.switch_to.frame("mainFrame")
+    #contw = driver.find_elements(By.CLASS_NAME, "contw-966")
+    #headskin = contw.find_elements(By.ID, "head-skin")
+    #bord = headskin.find_elements(By.ID, "whole-border")
 
-    try:
-        content = ""
-        if driver.find_elements(By.CLASS_NAME, "se-main-container"):
-            container = driver.find_element(By.CLASS_NAME, "se-main-container")
-            texts = container.find_elements(By.CLASS_NAME, "se-text")
-            content = "\n\n".join(t.text.strip() for t in texts if t.text.strip())
-        elif driver.find_elements(By.ID, "postViewArea"):
-            container = driver.find_element(By.ID, "postViewArea")
-            content = container.text.strip()
-        else:
-            print(f"본문 구조 알 수 없음: {post['link']}")
-        post["content"] = content
-    except:
-        print(f"본문 수집 실패: {post['link']}")
-        post["content"] = ""
+    elements = driver.find_elements(By.CSS_SELECTOR, "ul.thumblist li.item a")
+
+def get_categories():
+    driver.get("https://blog.naver.com/gridanews")
+    driver.switch_to.frame("mainFrame")
+
+    cats = []
+    anchors = driver.find_elements(By.CSS_SELECTOR, "#category-list a[href*='PostList.naver'][href*='categoryNo=']")
+    seen = set()
+    for a in anchors:
+        href = (a.get_attribute("href") or "").strip()
+        m = re.search(r"categoryNo=(\d+)", href)
+        if not m: 
+            continue
+        cno = int(m.group(1))
+        if cno in seen: 
+            continue
+        elif cno == 0:
+            continue
+        seen.add(cno)
+        cats.append({
+            "categoryNo": cno,
+            "categoryName": a.text.strip(),
+            "href": urljoin("https://blog.naver.com", href),
+            "maxpage" : ""
+        })
 
     driver.switch_to.default_content()
+    
+    # 파일 저장
+    with open("everyones_IT/cate_info.json", "w", encoding="utf-8") as f:
+        json.dump(cats, f, ensure_ascii=False, indent=2)
+    print(len(cats))
 
-# save
-with open("data.json", "w", encoding="utf-8") as f:
-    json.dump(post_data, f, ensure_ascii=False, indent=2)
+def get_link_info():
+    in_path = "everyones_IT/cate_info.json"
+    out_path = "everyones_IT/link_info.json"
+    base = "https://blog.naver.com"
 
-driver.quit()
+    with open(in_path, "r", encoding="utf-8") as f:
+        cats = json.load(f)
+
+    results = []
+
+    for c in cats:
+        cno = c["categoryNo"]
+        cname = c["categoryName"]
+        href = c["href"].strip()  # 예: https://blog.naver.com/PostList.naver?blogId=gridanews&from=postList&categoryNo=25
+        maxpage = int(c["maxpage"])
+
+        for page in range(1, maxpage + 1):
+            url = f"{href}&currentPage={page}"
+            driver.get(url)
+            time.sleep(0.8)
+
+            # mainFrame 진입(있으면)
+            try:
+                driver.switch_to.frame("mainFrame")
+            except Exception:
+                pass
+
+            # 글 링크 수집
+            seen = set()
+            for a in driver.find_elements(By.CSS_SELECTOR, "a[href*='PostView.naver'][href*='logNo=']"):
+                h = (a.get_attribute("href") or "").strip()
+                if not h:
+                    continue
+                if h.startswith("/"):
+                    h = base + h
+                # 페이지 내 중복 제거(간단히 logNo로)
+                m = re.search(r"logNo=(\d+)", h)
+                if not m:
+                    continue
+                ln = m.group(1)
+                if ln in seen:
+                    continue
+                seen.add(ln)
+
+                results.append({
+                    "categoryNo": cno,
+                    "categoryName": cname,
+                    "page": page,
+                    "postLink": h
+                })
+
+            # 프레임 복귀
+            try:
+                driver.switch_to.default_content()
+            except Exception:
+                pass
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+
+def crawl_post_contents():
+    in_path = "everyones_IT/link_info.json"
+    out_path = "everyones_IT/post_data.json"
+
+    with open(in_path, "r", encoding="utf-8") as f:
+        items = json.load(f)
+
+    results = []
+    cnt = 0
+    for it in items:
+        cnt += 1
+        link = (it.get("postLink") or "").strip()
+        if not link:
+            continue
+        
+        driver.get(link)
+        time.sleep(0.7)
+
+        post_time = ""
+        content = ""
+        try:
+            #print("1")
+            #driver.switch_to.frame("mainFrame")
+            print(cnt)
+
+            # 게시 시점
+            els = driver.find_elements(By.CSS_SELECTOR, "span.se_publishDate")
+            if els:
+                post_time = els[0].text.strip()
+
+            # 본문
+            if driver.find_elements(By.CLASS_NAME, "se-main-container"):
+                container = driver.find_element(By.CLASS_NAME, "se-main-container")
+                texts = container.find_elements(By.CLASS_NAME, "se-text")
+                content = "\n\n".join(t.text.strip() for t in texts if t.text.strip())
+            elif driver.find_elements(By.ID, "postViewArea"):
+                container = driver.find_element(By.ID, "postViewArea")
+                content = container.text.strip()
+        except:
+            post_time = post_time or ""
+            content = content or ""
+        finally:
+            try:
+                driver.switch_to.default_content()
+            except:
+                pass
+
+        results.append({**it, "time": post_time, "content": content})
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    print(f"[OK] {len(results)} posts -> {out_path}")
+
+crawl_post_contents()
