@@ -113,6 +113,78 @@ def merge_for_ReMoDetect():
     with open("ReMoDetect/ReMoDetect_data.json", "w", encoding="utf-8") as f:
         json.dump(merged_list, f, ensure_ascii=False, indent=4)
 
+def merge_for_ReMoDetect_IT():
+    with open("everyones_IT/post_data_updated.json", "r", encoding="utf-8") as f:
+        data_list = json.load(f)
+    categoryNames = [post["categoryName"] for post in data_list]
+    times = [post["time"] for post in data_list]
+    contents = [post["content"] for post in data_list]
+
+    scores = []
+    with open("everyones_IT/naver_naver.trained_trained_model_naver_gpt_scores_IT.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            if "Score:" in line:
+                score = float(line.strip().split("Score:")[1])
+                scores.append(score)
+
+    merged_list = []
+    for i in range(5493):
+        merged = {
+            "num" : i+1,
+            "category" : categoryNames[i],
+            "time" : times[i],
+            "content" : contents[i],
+            "rm_score" : scores[i]
+        }
+        merged_list.append(merged)
+
+    with open("everyones_IT/ReMoDetect_data_IT.json", "w", encoding="utf-8") as f:
+        json.dump(merged_list, f, ensure_ascii=False, indent=4)
+
+def merge_tf_rm():
+    with open("text_fluoroscopy/text_fluoroscopy_data.json", "r", encoding="utf-8") as tf:
+        tf_data = json.load(tf)
+
+    with open("ReMoDetect/ReMoDetect_data.json", "r", encoding="utf-8") as rm:
+        rm_data = json.load(rm)
+
+    merged_data = []
+    for tf_post, rm_post in zip(tf_data, rm_data):
+        merged_post = {
+            "num": tf_post["num"],
+            "text": tf_post["text"],
+            "category": tf_post["category"],
+            "keyword": tf_post["keyword"],
+            "tf_score": tf_post["score"],
+            "rm_score": rm_post["score"]
+        }
+        merged_data.append(merged_post)
+
+    with open("score_data.json", "w", encoding="utf-8") as f:
+        json.dump(merged_data, f, ensure_ascii=False, indent=4)
+
+def merge_tf_rm_IT():
+    with open("everyones_IT/text_fluoroscopy_data_IT.json", "r", encoding="utf-8") as tf:
+        tf_data = json.load(tf)
+
+    with open("everyones_IT/ReMoDetect_data_IT.json", "r", encoding="utf-8") as rm:
+        rm_data = json.load(rm)
+
+    merged_data = []
+    for tf_post, rm_post in zip(tf_data, rm_data):
+        merged_post = {
+            "num": tf_post["num"],
+            "text": tf_post["content"],
+            "category": tf_post["category"],
+            "time": tf_post["time"],
+            "tf_score": tf_post["tf_score"],
+            "rm_score": rm_post["rm_score"]
+        }
+        merged_data.append(merged_post)
+
+    with open("everyones_IT/score_data_IT.json", "w", encoding="utf-8") as f:
+        json.dump(merged_data, f, ensure_ascii=False, indent=4)
+
 def merge_author_score_data():
     with open("datas/data.json", "r", encoding="utf-8") as f:
         data_list = json.load(f)
@@ -138,4 +210,4 @@ def merge_author_score_data():
     with open("datas/score_data_with_author.json", "w", encoding="utf-8") as f:
         json.dump(merged_list, f, ensure_ascii=False, indent=4)
 
-merge_for_text_fluoroscopy_IT()
+merge_tf_rm_IT()

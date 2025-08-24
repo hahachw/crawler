@@ -404,7 +404,47 @@ def plot_tf_scores_with_date_IT():
     plt.tight_layout()
     plt.show()
 
+def plot_rm_scores_with_date_IT():
+    # 파일 경로
+    path = "everyones_IT/ReMoDetect_data_IT.json"
+
+    # 데이터 로드
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 날짜 변환 함수
+    def parse_time(t):
+        # "2025. 8. 10. 13:27" 또는 "2025. 08. 11." 형태 모두 처리
+        t = t.strip().replace(".", "").replace("  ", " ")
+        parts = t.split()
+        if len(parts) == 3:  # 날짜만 있음
+            return datetime.strptime(parts[0] + " " + parts[1] + " " + parts[2], "%Y %m %d")
+        elif len(parts) == 4:  # 날짜 + 시간
+            return datetime.strptime(parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3], "%Y %m %d %H:%M")
+        else:
+            raise ValueError(f"Unexpected time format: {t}")
+
+    # 데이터에서 time과 tf_score 추출
+    times, scores = [], []
+    for d in data:
+        if "rm_score" in d and "time" in d:
+            try:
+                times.append(parse_time(d["time"]))
+                scores.append(d["rm_score"])
+            except Exception as e:
+                print("시간 파싱 실패:", d["time"], e)
+
+    # 시각화
+    plt.figure(figsize=(10, 6))
+    plt.scatter(times, scores, alpha=0.6, edgecolor="k")
+    plt.xlabel("Time")
+    plt.ylabel("RM Score")
+    plt.title("RM Score over Time")
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.show()
+
 #plot_with_tags_detail()
 #plot_author_scores("모두의IT")
 #format_everyones_IT()
-plot_tf_scores_with_date_IT()
+plot_rm_scores_with_date_IT()

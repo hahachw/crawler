@@ -302,5 +302,3 @@ def crawl_post_contents():
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
     print(f"[OK] {len(results)} posts -> {out_path}")
-
-crawl_post_contents()
